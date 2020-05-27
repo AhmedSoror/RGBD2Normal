@@ -28,6 +28,8 @@ from utils import norm_imsave, change_channel
 from models.eval import eval_normal_pixel, eval_print
 from loader.loader_utils import png_reader_32bit, png_reader_uint8
 
+from collections import namedtuple
+
 
 def test(args):
     # Setup Model
@@ -242,65 +244,135 @@ def test(args):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Params')
-    parser.add_argument('--arch_RGB', nargs='?', type=str, default='vgg_16_in',
-                        help='Architecture for RGB to use [\'vgg_16,vgg_16_in etc\']')
-    parser.add_argument('--arch_D', nargs='?', type=str, default='unet_3_mask_in',
-                        help='Architecture for Depth to use [\'unet_3, unet_3_mask, unet_3_mask_in etc\']')
-    parser.add_argument('--arch_F', nargs='?', type=str, default='fconv_ms',
-                        help='Architecture for Fusion to use [\'fconv,fconv_in, fconv_ms etc\']')
-    parser.add_argument('--arch_map', nargs='?', type=str, default='map_conv',
-                        help='Architecture for confidence map to use [\'mask, map_conv etc\']')
-    parser.add_argument('--model_savepath', nargs='?', type=str, default='./checkpoint/FCONV_MS',
-                        help='Path for model saving [\'checkpoint etc\']')
-    parser.add_argument('--model_full_name', nargs='?', type=str, default='',
-                        help='The full name of the model to be tested.')
+    # parser = argparse.ArgumentParser(description='Params')
+    # parser.add_argument('--arch_RGB', nargs='?', type=str, default='vgg_16_in',help='Architecture for RGB to use [\'vgg_16,vgg_16_in etc\']')
+    # parser.add_argument('--arch_D', nargs='?', type=str, default='unet_3_mask_in',help='Architecture for Depth to use [\'unet_3, unet_3_mask, unet_3_mask_in etc\']')
+    # parser.add_argument('--arch_F', nargs='?', type=str, default='fconv_ms',help='Architecture for Fusion to use [\'fconv,fconv_in, fconv_ms etc\']')
+    # parser.add_argument('--arch_map', nargs='?', type=str, default='map_conv',help='Architecture for confidence map to use [\'mask, map_conv etc\']')
+    # parser.add_argument('--model_savepath', nargs='?', type=str, default='./checkpoint/FCONV_MS/',help='Path for model saving [\'checkpoint etc\']')
+    # parser.add_argument('--model_full_name', nargs='?', type=str, default='fconv_ms_scannet_l1_1_hybrid_best.pkl',help='The full name of the model to be tested.')
 
-    parser.add_argument('--dataset', nargs='?', type=str, default='matterport',
-                        help='Dataset to use [\'nyuv2, matterport, scannet, etc\']')
-    parser.add_argument('--test_split', nargs='?', type=str, default='', help='The split of dataset in testing')
+    # parser.add_argument('--dataset', nargs='?', type=str, default='matterport',help='Dataset to use [\'nyuv2, matterport, scannet, etc\']')
+    # parser.add_argument('--test_split', nargs='?', type=str, default='', help='The split of dataset in testing')
 
-    parser.add_argument('--loss', nargs='?', type=str, default='l1',
-                        help='Loss type: cosine, l1')
-    parser.add_argument('--model_num', nargs='?', type=str, default='2',
-                        help='Checkpoint index [\'1,2,3, etc\']')
-    parser.add_argument('--img_rows', nargs='?', type=int, default=256,
-                        help='Height of the input image, 256(mt), 240(nyu)')
-    parser.add_argument('--img_cols', nargs='?', type=int, default=320,
-                        help='Width of the input image, 320(yinda and nyu)')
+    
+    # parser.add_argument('--loss', nargs='?', type=str, default='l1',help='Loss type: cosine, l1')
+    # parser.add_argument('--model_num', nargs='?', type=str, default='2',help='Checkpoint index [\'1,2,3, etc\']')
+    # parser.add_argument('--img_rows', nargs='?', type=int, default=480,help='Height of the input image, 256(mt), 240(nyu)')
+    # parser.add_argument('--img_cols', nargs='?', type=int, default=640,help='Width of the input image, 320(yinda and nyu)')
+    # parser.add_argument('--testset', dest='imgset', action='store_true',help='Test on set from dataloader, decided by --dataset | True by default')
+    # parser.add_argument('--no_testset', dest='imgset', action='store_false',help='Test on single image | True by default')
+    # parser.set_defaults(imgset=False)
+    # parser.add_argument('--testset_out_path', nargs='?', type=str, default='./result/mt_clean_small',help='Path of the output normal')
+    
+    # parser.add_argument('--img_path', nargs='?', type=str, default='./sample_pic/sc_rgb/',help='Path of the input image')
+    # parser.add_argument('--depth_path', nargs='?', type=str, default='./sample_pic/sc_depth/',help='Path of the input image, mt_data_clean!!!!!!!!!')
+    # parser.add_argument('--ir_path', nargs='?', type=str, default='../Depth2Normal/Dataset/ir_mask/',help='Path of the input image, mt_data_clean!!!!!!!!!')
+    # parser.add_argument('--out_path', nargs='?', type=str, default='./result/demo_rgbd_sc/',help='Path of the output normal')
+    # parser.add_argument('--d_scale', nargs='?', type=int, default=10000,help='Depth scale for depth input. Set the scale to make the 1 in scaled depth equal to 10m.\
+    #                         Only valid testing using image folder')
+    # parser.add_argument('--img_norm', dest='img_norm', action='store_true',help='Enable input image scales normalization [0, 1] | True by default')
+    # parser.add_argument('--no-img_norm', dest='img_norm', action='store_false',help='Disable input image scales normalization [0, 1] | True by default')
+    # parser.set_defaults(img_norm=True)
+    # parser.add_argument('--img_rotate', dest='img_rot', action='store_true',help='Enable input image transpose | False by default')
+    # parser.add_argument('--no-img_rotate', dest='img_rot', action='store_false',help='Disable input image transpose | False by default')
 
-    parser.add_argument('--testset', dest='imgset', action='store_true',
-                        help='Test on set from dataloader, decided by --dataset | True by default')
-    parser.add_argument('--no_testset', dest='imgset', action='store_false',
-                        help='Test on single image | True by default')
-    parser.set_defaults(imgset=True)
-    parser.add_argument('--testset_out_path', nargs='?', type=str, default='./result/mt_clean_small',
-                        help='Path of the output normal')
+    # parser.set_defaults(img_rot=False)
+    # args = parser.parse_args()
 
-    parser.add_argument('--img_path', nargs='?', type=str, default='../Depth2Normal/Dataset/normal/',
-                        help='Path of the input image')
-    parser.add_argument('--depth_path', nargs='?', type=str, default='../Depth2Normal/Dataset/normal/',
-                        help='Path of the input image, mt_data_clean!!!!!!!!!')
-    parser.add_argument('--ir_path', nargs='?', type=str, default='../Depth2Normal/Dataset/ir_mask/',
-                        help='Path of the input image, mt_data_clean!!!!!!!!!')
-    parser.add_argument('--out_path', nargs='?', type=str, default='../Depth2Normal/Dataset/normal/',
-                        help='Path of the output normal')
-    parser.add_argument('--d_scale', nargs='?', type=int, default=40000,
-                        help='Depth scale for depth input. Set the scale to make the 1 in scaled depth equal to 10m.\
-                         Only valid testing using image folder')
+    parser = namedtuple("Parser","arch_RGB arch_D arch_map arch_F model_savepath model_full_name dataset test_split \
+        loss model_num img_rows img_cols imgset testset_out_path img_path depth_path ir_path out_path d_scale img_norm img_rot")
+    args = parser( 'vgg_16_in', 'unet_3_mask_in' , 'map_conv', 'fconv_ms', './checkpoint/FCONV_MS/', 'fconv_ms_scannet_l1_1_hybrid_best.pkl', 'matterport', '','l1', '2'
+    , 480, 640,False, './result/mt_clean_small', './sample_pic/sc_rgb/', './sample_pic/sc_depth/' , '../Depth2Normal/Dataset/ir_mask/', './result/demo_rgbd_sc/'
+    , 10000,True, False)
+    
+    # args.arch_RGB='vgg_16_in'
+    # args.arch_D='unet_3_mask_in'
+    # args.arch_map='map_conv'
+    # args.arch_F='fconv_ms'
+    # args.model_savepath='./checkpoint/FCONV_MS/'
+    # args.model_full_name='fconv_ms_scannet_l1_1_hybrid_best.pkl'
+    # args.dataset = 'matterport'
+    # args.test_split = ''
+    # args.loss = 'l1'
+    # args.model_num = '2'
+    # args.img_rows = 480
+    # args.img_cols = 640
+    # args.imgset=False
+    # args.testset_out_path= './result/mt_clean_small'
+    # args.img_path = './sample_pic/sc_rgb/'
+    # args.depth_path = './sample_pic/sc_depth/'
+    # args.ir_path = '../Depth2Normal/Dataset/ir_mask/'
+    # args.out_path = './result/demo_rgbd_sc/'
+    # args.d_scale = 10000
+    # args.img_norm=True
+    # args.img_rot=False
 
-    parser.add_argument('--img_norm', dest='img_norm', action='store_true',
-                        help='Enable input image scales normalization [0, 1] | True by default')
-    parser.add_argument('--no-img_norm', dest='img_norm', action='store_false',
-                        help='Disable input image scales normalization [0, 1] | True by default')
-    parser.set_defaults(img_norm=True)
 
-    parser.add_argument('--img_rotate', dest='img_rot', action='store_true',
-                        help='Enable input image transpose | False by default')
-    parser.add_argument('--no-img_rotate', dest='img_rot', action='store_false',
-                        help='Disable input image transpose | False by default')
 
-    parser.set_defaults(img_rot=False)
 
-    args = parser.parse_args()
+
+
     test(args)
+    # parser = argparse.ArgumentParser(description='Params')
+    # parser.add_argument('--arch_RGB', nargs='?', type=str, default='vgg_16_in',
+    #                     help='Architecture for RGB to use [\'vgg_16,vgg_16_in etc\']')
+    # parser.add_argument('--arch_D', nargs='?', type=str, default='unet_3_mask_in',
+    #                     help='Architecture for Depth to use [\'unet_3, unet_3_mask, unet_3_mask_in etc\']')
+    # parser.add_argument('--arch_F', nargs='?', type=str, default='fconv_ms',
+    #                     help='Architecture for Fusion to use [\'fconv,fconv_in, fconv_ms etc\']')
+    # parser.add_argument('--arch_map', nargs='?', type=str, default='map_conv',
+    #                     help='Architecture for confidence map to use [\'mask, map_conv etc\']')
+    # parser.add_argument('--model_savepath', nargs='?', type=str, default='./checkpoint/FCONV_MS',
+    #                     help='Path for model saving [\'checkpoint etc\']')
+    # parser.add_argument('--model_full_name', nargs='?', type=str, default='',
+    #                     help='The full name of the model to be tested.')
+
+    # parser.add_argument('--dataset', nargs='?', type=str, default='matterport',
+    #                     help='Dataset to use [\'nyuv2, matterport, scannet, etc\']')
+    # parser.add_argument('--test_split', nargs='?', type=str, default='', help='The split of dataset in testing')
+
+    # parser.add_argument('--loss', nargs='?', type=str, default='l1',
+    #                     help='Loss type: cosine, l1')
+    # parser.add_argument('--model_num', nargs='?', type=str, default='2',
+    #                     help='Checkpoint index [\'1,2,3, etc\']')
+    # parser.add_argument('--img_rows', nargs='?', type=int, default=256,
+    #                     help='Height of the input image, 256(mt), 240(nyu)')
+    # parser.add_argument('--img_cols', nargs='?', type=int, default=320,
+    #                     help='Width of the input image, 320(yinda and nyu)')
+
+    # parser.add_argument('--testset', dest='imgset', action='store_true',
+    #                     help='Test on set from dataloader, decided by --dataset | True by default')
+    # parser.add_argument('--no_testset', dest='imgset', action='store_false',
+    #                     help='Test on single image | True by default')
+    # parser.set_defaults(imgset=True)
+    # parser.add_argument('--testset_out_path', nargs='?', type=str, default='./result/mt_clean_small',
+    #                     help='Path of the output normal')
+
+    # parser.add_argument('--img_path', nargs='?', type=str, default='../Depth2Normal/Dataset/normal/',
+    #                     help='Path of the input image')
+    # parser.add_argument('--depth_path', nargs='?', type=str, default='../Depth2Normal/Dataset/normal/',
+    #                     help='Path of the input image, mt_data_clean!!!!!!!!!')
+    # parser.add_argument('--ir_path', nargs='?', type=str, default='../Depth2Normal/Dataset/ir_mask/',
+    #                     help='Path of the input image, mt_data_clean!!!!!!!!!')
+    # parser.add_argument('--out_path', nargs='?', type=str, default='../Depth2Normal/Dataset/normal/',
+    #                     help='Path of the output normal')
+    # parser.add_argument('--d_scale', nargs='?', type=int, default=40000,
+    #                     help='Depth scale for depth input. Set the scale to make the 1 in scaled depth equal to 10m.\
+    #                      Only valid testing using image folder')
+
+    # parser.add_argument('--img_norm', dest='img_norm', action='store_true',
+    #                     help='Enable input image scales normalization [0, 1] | True by default')
+    # parser.add_argument('--no-img_norm', dest='img_norm', action='store_false',
+    #                     help='Disable input image scales normalization [0, 1] | True by default')
+    # parser.set_defaults(img_norm=True)
+
+    # parser.add_argument('--img_rotate', dest='img_rot', action='store_true',
+    #                     help='Enable input image transpose | False by default')
+    # parser.add_argument('--no-img_rotate', dest='img_rot', action='store_false',
+    #                     help='Disable input image transpose | False by default')
+
+    # parser.set_defaults(img_rot=False)
+
+    # args = parser.parse_args()
+    # test(args)
