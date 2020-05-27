@@ -177,7 +177,8 @@ def test(args):
             # Change channels
             outputs_norm = change_channel(outputs_norm)
 
-            misc.imsave(args.out_path, outputs_norm)
+            # misc.imsave(args.out_path, outputs_norm)
+            misc.imsave("temp/output.png", outputs_norm[0])
             print("Complete")
             # end of test on single image
         else:
@@ -221,7 +222,9 @@ def test(args):
                 # outputs_norm = misc.imresize(outputs_norm, (height, width))
 
                 # Save the result
-                misc.imsave(pjoin(args.out_path, output_filename), outputs_norm)
+                # misc.imsave(pjoin(args.out_path, output_filename), outputs_norm)
+                # misc.imsave(str(args.out_path)+''+str(output_filename), outputs_norm[0])
+                misc.imsave("temp/"+output_filename+".png", outputs_norm[0])
 
                 # Save to mat file, if needed
                 # outputs_mat = outputs.tolist()

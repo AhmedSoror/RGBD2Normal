@@ -7,6 +7,8 @@
 import torch.nn as nn
 import torch
 from models_utils import *
+import numpy as np
+import cv2
 
 class fconv_ms(nn.Module):
     
@@ -81,7 +83,11 @@ class fconv_ms(nn.Module):
         self.deconv1_ms = nn.ConvTranspose2d(filters_rgb[0], 3, 3, 1, 1)
 
     def forward(self, input1, input2, mask):
-
+        # res = cv2.resize(input2, dsize=(input1.shape[2], input1.shape[3]), interpolation=cv2.INTER_CUBIC)
+        
+        # print('fconv_msL88_ input 1--------------',input1.shape)
+        # print('fconv_msL89_ input 2--------------',input2.shape)
+        # print('fconv_msL88_ input 1--------------',type(input1))
         filters_d = [64, 128, 256, 256]
         # encoder RGB
         features1 = self.conv1(input1)#64
@@ -93,8 +99,9 @@ class fconv_ms(nn.Module):
         features4 = self.conv4(features3_p)#256
         features4_p, indices4_p = self.pool4(features4)
         features5 = self.conv5(features4_p)#256
-
+        
         # encoder depth
+        
         features1_d = self.conv1_d(input2)#64
         features1_p_d= self.pool1_d(features1_d)
         features2_d = self.conv2_d(features1_p_d)#128
@@ -103,6 +110,25 @@ class fconv_ms(nn.Module):
         features3_p_d = self.pool3_d(features3_d)
         features4_d = self.conv4_d(features3_p_d)#256
 
+        # print('------------------ L features1:  ---------------',np.array(features1).shape)        
+        # print('------------------ L features1_d:  ---------------',np.array(features1_d).shape)
+        # print('------------------ L features1_p:  ---------------',np.array(features1_p).shape)
+        # print('------------------ L features1_p_d:  ---------------',np.array(features1_p_d).shape)
+        
+        # print('------------------ L features2:  ---------------',np.array(features2).shape)
+        # print('------------------ L features2_d:  ---------------',np.array(features2_d).shape)
+        # print('------------------ L features2_p:  ---------------',np.array(features2_p).shape)
+        # print('------------------ L features2_p_d:  ---------------',np.array(features2_p_d).shape)
+        
+        # print('------------------ L features3:  ---------------',np.array(features3).shape)
+        # print('------------------ L features3_d:  ---------------',np.array(features3_d).shape)
+        # print('------------------ L features3_p:  ---------------',np.array(features3_p).shape)
+        # print('------------------ L features3_p_d:  ---------------',np.array(features3_p_d).shape)
+        # print('------------------ L features4:  ---------------',np.array(features4).shape)
+        # print('------------------ L features4_d:  ---------------',np.array(features4_d).shape)
+        # print('------------------ L features4_p:  ---------------',np.array(features4_p).shape)
+        # print('------------------ L features5:  ---------------',np.array(features5).shape)
+        
         # encoder mask, follow depth, generate 4 difference sizes
         mask = mask.unsqueeze(0).permute(1,0,2,3)
         mask1_p = self.pool1_d(mask)
@@ -110,6 +136,7 @@ class fconv_ms(nn.Module):
         mask3_p = self.pool3_d(mask2_p)
 
         # decoder depth, as the giver
+        
         defeature3t_d = self.deconv4_d(features4_d)#256, 1/8
         defeature3_d = torch.cat((self.unpool3_d(defeature3t_d), features3_d), 1)#512
         defeature2t_d = self.deconv3_d(defeature3_d)#128, 1/4
@@ -118,6 +145,13 @@ class fconv_ms(nn.Module):
         defeature1_d = torch.cat((self.unpool1_d(defeature1t_d), features1_d), 1)#128
         output_d = self.deconv1_d(defeature1_d)#3, 1/1
 
+        # print('------------------ defeature3t_d ---------------',np.array(defeature3t_d).shape)
+        # print('------------------ defeature3_d ---------------',np.array(defeature3_d).shape)
+        # print('------------------ defeature2t_d ---------------',np.array(defeature2t_d).shape)
+        # print('------------------ defeature2_d ---------------',np.array(defeature2_d).shape)
+        # print('------------------ defeature1t_d ---------------',np.array(defeature1t_d).shape)
+        # print('------------------ defeature1_d ---------------',np.array(defeature1_d).shape)
+        
         # masking features from depth
         mask = mask.repeat(1,3,1,1)
         mask1_p = mask1_p.repeat(1,filters_d[0],1,1)

@@ -145,8 +145,8 @@ def test(args):
             print("Saving to %s" % (sum_file))
             # end of dataset test
     else:
-        if os.path.isdir(args.out_path) == False:
-            os.mkdir(args.out_path)
+        # if os.path.isdir(args.out_path) == False:
+        #     os.mkdir(args.out_path)
         print("Read Input Image from : {}".format(args.img_path))
         for i in os.listdir(args.img_path):
             if not i.endswith('.jpg'):
@@ -157,6 +157,10 @@ def test(args):
             depth_f = args.depth_path + i[:-4] + '.png'
             output_f = args.out_path + i[:-4] + '_rgbd.png'
             img = misc.imread(input_f)
+            print('test_L160_ RGB--------------',img.shape)
+            
+            img_d = misc.imread(depth_f)
+            print('test_L163_ depth--------------',img_d.shape)
 
             orig_size = img.shape[:-1]
             if args.img_rot:
@@ -175,7 +179,8 @@ def test(args):
             img = torch.from_numpy(img).float()
 
             if args.img_rot:
-                depth = png_reader_32bit(depth_f, (args.img_rows, args.img_cols))
+                # depth = png_reader_32bit(depth_f, (args.img_rows, args.img_cols))
+                depth = png_reader_32bit(depth_f)
                 depth = np.transpose(depth, (1, 0))
                 depth = np.flipud(depth)
                 # valid = png_reader_uint8(mask_f, (args.img_rows,args.img_cols))
@@ -230,7 +235,8 @@ def test(args):
             outputs_norm = np.squeeze(outputs_norm.data.cpu().numpy(), axis=0)
             # outputs_norm = misc.imresize(outputs_norm, orig_size)
             outputs_norm = change_channel(outputs_norm)
-            misc.imsave(output_f, outputs_norm)
+        
+            misc.imsave("result/"+i+".png", outputs_norm[0])
         print("Complete")
         # end of test on no dataset images
 
