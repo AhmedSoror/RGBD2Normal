@@ -154,7 +154,7 @@ def test(args):
             if not i.endswith('.jpg'):
                 continue
 
-            print i
+            print(i)
             input_f = args.img_path + i
             depth_f = args.depth_path + i[:-4] + '.png'
             output_f = args.out_path + i[:-4] + '_rgbd.png'
